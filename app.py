@@ -42,11 +42,11 @@ url = st.text_input("請輸入網頁連結：")
 if url:
     with st.spinner("正在分析中..."):
         data = fetch_article(url)
-        if data:
-            content = data["content"]
-            title = data["title"]
-            summary = summarize_article(content, title)
-            st.subheader("📌 條列式摘要 + 精華總結")
-            st.markdown(summary)
-        else:
-            st.error("❌ 無法擷取內容，請確認網址是否正確。")
+        if data and "content" in data and data["content"]:
+    content = data["content"]
+    title = data["title"]
+    summary = summarize_article(content, title)
+    st.subheader("📌 條列式摘要 + 精華總結")
+    st.markdown(summary)
+else:
+    st.error("❌ 無法擷取內容，請確認網址是否正確，或該網站是否支援文字擷取。")
