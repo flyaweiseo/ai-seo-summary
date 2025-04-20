@@ -60,7 +60,7 @@ def summarize_article(content, title="（無標題）"):
     return response.choices[0].message.content.strip()
 
 # ✅ Streamlit 主畫面
-st.title("🔍 AI SEO 顧問：網頁重點摘要工具")
+st.title("🔍 網頁內容重點摘要工具")
 
 url = st.text_input("請輸入網頁連結：")
 
