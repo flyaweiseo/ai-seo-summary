@@ -14,9 +14,12 @@ def fetch_article(url):
 
 def summarize_article(content):
     prompt = f"""
-你是一位有15年經驗的資深SEO顧問，擅長梳理文章架構、提煉重點與總結精華，請幫我整理以下文章內容：
+你是一位有15年經驗的資深SEO顧問，善於快速理解中英文內容、擅長梳理文章架構、提煉重點與總結精華。
+
+**請將下方內容不論是中文或英文，皆以「繁體中文」輸出條列摘要與結語總結。**
 
 【輸出格式】
+- 請於開頭加上文章標題，格式為：# 文章標題：{title}
 1. 條列式摘要：請依照內容邏輯，加入重點段落標題（使用 H2 或 H3 標記），每個段落下用條列式寫出重點（使用 - 開頭），資訊分層清楚、乾淨有條理。
 2. 結語總結：請以不超過 500 字的方式，寫出這篇文章的精隨，彷彿要讓沒看過文章的人快速理解核心觀點。
 
@@ -38,9 +41,11 @@ url = st.text_input("請輸入網頁連結：")
 
 if url:
     with st.spinner("正在分析中..."):
-        content = fetch_article(url)
-        if content:
-            summary = summarize_article(content)
+        data = fetch_article(url)
+        if data:
+            content = data["content"]
+            title = data["title"]
+            summary = summarize_article(content, title)
             st.subheader("📌 條列式摘要 + 精華總結")
             st.markdown(summary)
         else:
