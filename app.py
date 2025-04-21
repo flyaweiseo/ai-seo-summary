@@ -4,7 +4,7 @@ import trafilatura
 from newspaper import Article
 
 # 頁面設定
-st.set_page_config(page_title="AI SEO 顧問摘要工具", page_icon="📌")
+st.set_page_config(page_title="網頁內容重點摘要工具", page_icon="📌")
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # ✅ 正確版本 fetch_article（處理 trafilatura 回傳 str、不使用 .get()）
@@ -60,7 +60,7 @@ def summarize_article(content, title="（無標題）"):
     return response.choices[0].message.content.strip()
 
 # ✅ Streamlit 主介面
-st.title("🔍 AI SEO 顧問：網頁或貼文摘要工具（中英文輸入，繁中輸出）")
+st.title("🔍 網頁內容重點摘要工具")
 
 tab1, tab2 = st.tabs(["🌐 貼網址分析", "✍️ 貼上原文"])
 
