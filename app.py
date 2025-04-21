@@ -5,37 +5,37 @@ from newspaper import Article
 
 # 頁面設定
 st.set_page_config(page_title="AI SEO 顧問摘要工具", page_icon="📌")
-
-# 設定 OpenAI 金鑰
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# ✅ 優先使用 trafilatura，失敗時改用 newspaper3k
+# ✅ 正確版本 fetch_article（處理 trafilatura 回傳 str、不使用 .get()）
 def fetch_article(url):
     downloaded = trafilatura.fetch_url(url)
     if downloaded:
-        extracted = trafilatura.extract(downloaded, with_metadata=True)
-        if extracted and extracted.get("text"):
+        text = trafilatura.extract(downloaded)
+        if text:
+            metadata = trafilatura.metadata.extract_metadata(downloaded)
+            title = metadata.title if metadata and metadata.title else "無標題文章（trafilatura）"
             return {
-                "content": extracted["text"],
-                "title": extracted.get("title", "無標題文章（由 trafilatura 擷取）")
+                "content": text,
+                "title": title
             }
 
-    # ➕ 備援方案：使用 newspaper3k
+    # ➕ 備援方案：newspaper3k
     try:
-        article = Article(url, language='zh')
+        article = Article(url)
         article.download()
         article.parse()
         if article.text:
             return {
                 "content": article.text,
-                "title": article.title or "無標題文章（由 newspaper 擷取）"
+                "title": article.title or "無標題文章（newspaper）"
             }
     except:
         return None
 
     return None
 
-# ✅ 用 GPT-4 生成繁體摘要
+# ✅ GPT 繁體中文摘要邏輯
 def summarize_article(content, title="（無標題）"):
     prompt = f"""
 你是一位有15年經驗的資深SEO顧問，擅長快速理解中英文內容、統整資訊並提煉重點。
@@ -59,25 +59,39 @@ def summarize_article(content, title="（無標題）"):
     )
     return response.choices[0].message.content.strip()
 
-# ✅ Streamlit 主畫面
-st.title("🔍 網頁內容重點摘要工具")
+# ✅ Streamlit 主介面
+st.title("🔍 AI SEO 顧問：網頁或貼文摘要工具（中英文輸入，繁中輸出）")
 
-url = st.text_input("請輸入網頁連結：")
+tab1, tab2 = st.tabs(["🌐 貼網址分析", "✍️ 貼上原文"])
 
-if url:
-    with st.spinner("正在擷取與分析文章..."):
-        data = fetch_article(url)
-        if data and "content" in data and data["content"]:
-            content = data["content"]
-            title = data["title"]
-            summary = summarize_article(content, title)
+# 👉 Tab 1：網址擷取分析
+with tab1:
+    url = st.text_input("請輸入網頁連結：")
+    if url:
+        with st.spinner("擷取與分析中..."):
+            data = fetch_article(url)
+            if data and "content" in data and data["content"]:
+                content = data["content"]
+                title = data["title"]
+                summary = summarize_article(content, title)
 
+                st.subheader("📌 條列式摘要 + 精華總結")
+                st.markdown(summary)
+
+                with st.expander("📄 原始文章內容"):
+                    st.markdown(f"**原始文章標題：** {title}")
+                    st.write(content)
+            else:
+                st.warning("⚠️ 擷取失敗，可能該網站使用防爬蟲，請改用下方【✍️ 貼上原文】分析")
+
+# 👉 Tab 2：手動貼文分析
+with tab2:
+    title_input = st.text_input("文章標題（可空白）")
+    content_input = st.text_area("請貼上你要分析的文章內容：", height=300)
+    if st.button("生成摘要", key="manual"):
+        if content_input.strip():
+            summary = summarize_article(content_input, title_input or "手動輸入文章")
             st.subheader("📌 條列式摘要 + 精華總結")
             st.markdown(summary)
-
-            with st.expander("📄 查看原始文章內容"):
-                st.markdown(f"**原始文章標題：** {title}")
-                st.write(content)
-
         else:
-            st.error("❌ 無法擷取內容，請確認網址是否正確，或該網站是否支援文字擷取。")
+            st.error("❌ 內容不能為空")
